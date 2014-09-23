@@ -17,11 +17,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-node.default[:vagrant][:plugins]= ['vagrant-berkshelf']
-node.default[:rvm][:user_installs] = [ 'user' => 'jenkins']
+node.default[:vagrant][:plugins] = ['vagrant-berkshelf']
+node.default[:rvm][:user_installs] = ['user' => 'jenkins']
 node.default[:rvm] = 'user_home_root'
-
 node.default[:jenkins][:master][:jvm_options] = "-DhttpProxyHost=#{node[:kitchen_jenkins][:proxy][:host]} -DhttpProxyPort=#{node[:kitchen_jenkins][:proxy][:port]} -DhttpsProxyHost=#{node[:kitchen_jenkins][:proxy][:host]} -DhttpsProxyPort=#{node[:kitchen_jenkins][:proxy][:port]}" unless node[:kitchen_jenkins][:proxy][:host].nil?
+node.default[:docker][:group_members] = %W( #{node[:jenkins][:master][:user]} root )
 
 include_recipe 'build-essential::default'
 include_recipe 'yum-epel::default' if platform_family?('rhel', 'fedora')
@@ -29,6 +29,17 @@ include_recipe 'yum-repoforge::default' if platform_family?('rhel', 'fedora')
 include_recipe 'apt::default' if platform_family?('debian')
 include_recipe 'java::default'
 include_recipe 'jenkins::master'
+
+sysctl_param 'net.ipv4.ip_forward' do
+  value 1
+  only_if { node[:kitchen_jenkins][:kitchen][:driver] == 'docker' }
+end
+
+sudo node[:jenkins][:master][:user] do
+  user node[:jenkins][:master][:user]
+  nopasswd true
+  only_if { node[:kitchen_jenkins][:kitchen][:driver] == 'docker' }
+end
 
 case node[:kitchen_jenkins][:kitchen][:driver]
 when 'vagrant' then
@@ -75,4 +86,10 @@ node[:kitchen_jenkins][:gems].each do |gems|
     action :run
     not_if "#{node[:jenkins][:master][:home]}/.rubies/ruby-1.9.3-p547/bin/gem list --local | grep #{gems}"
   end
+end
+
+service 'docker' do
+  action :restart
+  not_if 'docker info'
+  only_if { node[:kitchen_jenkins][:kitchen][:driver] == 'docker' }
 end

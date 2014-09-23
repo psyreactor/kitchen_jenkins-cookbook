@@ -13,6 +13,7 @@ describe 'icinga::default on Debian 7.2' do
   end
 
   before do
+    stub_command('docker info').and_return(false)
     stub_command('/var/lib/jenkins/.rubies/ruby-1.9.3-p547/bin/gem list --local | grep foodcritic').and_return(false)
     stub_command('/var/lib/jenkins/.rubies/ruby-1.9.3-p547/bin/gem list --local | grep berkshelf').and_return(false)
     stub_command('/var/lib/jenkins/.rubies/ruby-1.9.3-p547/bin/gem list --local | grep test-kitchen').and_return(false)
@@ -51,6 +52,14 @@ describe 'icinga::default on Debian 7.2' do
 
   it 'include recipe vagrant default' do
     expect(chef_run).to include_recipe('vagrant::default')
+  end
+
+  it 'add jenkins to sudoers' do
+    expect(chef_run).to_not install_sudo('jenkins')
+  end
+
+  it 'enable ip_fordwarder' do
+    expect(chef_run).to_not apply_sysctl_param('net.ipv4.ip_forward')
   end
 
   it 'not include recipe docker default' do
@@ -94,6 +103,10 @@ describe 'icinga::default on Debian 7.2' do
 
   it 'restart jenkins to apply plugins' do
     expect(chef_run).to execute_jenkins_command('safe-restart')
+  end
+
+  it 'restart docker ungly bug' do
+    expect(chef_run).to_not restart_service('docker')
   end
 
 end

@@ -21,6 +21,8 @@ Requirements
 - ruby_build - https://github.com/fnichol/chef-ruby_build
 - build-essential - https://github.com/opscode-cookbooks/build-essential
 - docker - https://github.com/bflad/chef-docker
+- sudo - https://github.com/opscode-cookbooks/sudo
+- sysctl - https://github.com/onehealth-cookbooks/sysctl
 
 The following platforms and versions are tested and supported using Opscode's test-kitchen.
 
