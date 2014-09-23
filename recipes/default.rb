@@ -20,6 +20,7 @@
 node.default[:vagrant][:plugins]= ['vagrant-berkshelf']
 node.default[:rvm][:user_installs] = [ 'user' => 'jenkins']
 node.default[:rvm] = 'user_home_root'
+node.default[:jenkins][:master][:jvm_options] = "-DhttpProxyHost=#{node[:kitchen_jenkins][:proxy][:host]} -DhttpProxyPort=#{node[:kitchen_jenkins][:proxy][:port]} -DhttpsProxyHost=#{node[:kitchen_jenkins][:proxy][:host]} -DhttpProxyPort=#{node[:kitchen_jenkins][:proxy][:host]}"
 
 include_recipe 'build-essential::default'
 include_recipe 'yum-epel::default' if platform_family?('rhel', 'fedora')

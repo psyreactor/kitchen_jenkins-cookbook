@@ -53,6 +53,18 @@ Recipes
     <td>Driver test-kitchen vagrant or docker are support</td>
     <td><tt>vagrant</tt></td>
   </tr>
+  <tr>
+    <td><tt>node[:jenkins_kitchen][:proxy][:host]</tt></td>
+    <td>String</td>
+    <td>proxy for jenkins</td>
+    <td><tt>192.168.0.1</tt></td>
+  </tr>
+  <tr>
+    <td><tt>node[:jenkins_kitchen][:proxy][:port]</tt></td>
+    <td>String</td>
+    <td>proxy port for jenkins</td>
+    <td><tt>3128</tt></td>
+  </tr>
 </table>
 ## Usage
 
