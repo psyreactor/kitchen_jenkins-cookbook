@@ -29,6 +29,7 @@ include_recipe 'yum-repoforge::default' if platform_family?('rhel', 'fedora')
 include_recipe 'apt::default' if platform_family?('debian')
 include_recipe 'java::default'
 include_recipe 'jenkins::master'
+include_recipe 'sysctl::apply'
 
 sysctl_param 'net.ipv4.ip_forward' do
   value 1
@@ -90,6 +91,5 @@ end
 
 service 'docker' do
   action :restart
-  not_if 'docker info'
   only_if { node[:kitchen_jenkins][:kitchen][:driver] == 'docker' }
 end
