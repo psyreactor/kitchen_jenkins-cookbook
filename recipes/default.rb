@@ -17,12 +17,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-node.default[:vagrant][:plugins] = ['vagrant-berkshelf']
-node.default[:rvm][:user_installs] = ['user' => 'jenkins']
-node.default[:rvm] = 'user_home_root'
-node.default[:jenkins][:master][:jvm_options] = "-DhttpProxyHost=#{node[:kitchen_jenkins][:proxy][:host]} -DhttpProxyPort=#{node[:kitchen_jenkins][:proxy][:port]} -DhttpsProxyHost=#{node[:kitchen_jenkins][:proxy][:host]} -DhttpsProxyPort=#{node[:kitchen_jenkins][:proxy][:port]}" unless node[:kitchen_jenkins][:proxy][:host].nil?
-node.default[:docker][:group_members] = %W( #{node[:jenkins][:master][:user]} root )
 
+include_recipe 'kitchen_jenkins::_config'
 include_recipe 'build-essential::default'
 include_recipe 'yum-epel::default' if platform_family?('rhel', 'fedora')
 include_recipe 'yum-repoforge::default' if platform_family?('rhel', 'fedora')
@@ -30,6 +26,16 @@ include_recipe 'apt::default' if platform_family?('debian')
 include_recipe 'java::default'
 include_recipe 'jenkins::master'
 include_recipe 'sysctl::apply'
+include_recipe 'ruby_build::default'
+
+case node[:kitchen_jenkins][:kitchen][:driver]
+when 'vagrant' then
+  include_recipe 'virtualbox::default'
+  include_recipe 'virtualbox::webportal'
+  include_recipe 'vagrant::default'
+when 'docker' then
+  include_recipe 'docker::default'
+end
 
 sysctl_param 'net.ipv4.ip_forward' do
   value 1
@@ -42,17 +48,6 @@ sudo node[:jenkins][:master][:user] do
   only_if { node[:kitchen_jenkins][:kitchen][:driver] == 'docker' }
 end
 
-case node[:kitchen_jenkins][:kitchen][:driver]
-when 'vagrant' then
-  include_recipe 'virtualbox::default'
-  include_recipe 'virtualbox::webportal'
-  include_recipe 'vagrant::default'
-when 'docker' then
-  include_recipe 'docker::default'
-end
-
-include_recipe 'ruby_build::default'
-
 node[:kitchen_jenkins][:packeges].each do | pkg |
   package pkg do
     action :install
@@ -63,11 +58,13 @@ node[:kitchen_jenkins][:plugins].each do | plg |
   jenkins_plugin plg
 end
 
-template "#{node[:jenkins][:master][:home]}/org.codefirst.SimpleThemeDecorator.xml" do
-  source 'SimpleThemeDecorator.xml.erb'
-  user node[:jenkins][:master][:user]
-  group node[:jenkins][:master][:group]
-  mode '0644'
+%w(org.codefirst.SimpleThemeDecorator hudson.tasks.Mailer).each do |file|
+  template "#{node[:jenkins][:master][:home]}/#{file}.xml" do
+    source '#{file}.xml.erb'
+    user node[:jenkins][:master][:user]
+    group node[:jenkins][:master][:group]
+    mode '0644'
+  end
 end
 
 jenkins_command 'safe-restart'
