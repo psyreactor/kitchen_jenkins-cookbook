@@ -26,6 +26,3 @@ node.default[:jenkins][:master][:jvm_options] = "-DhttpProxyHost=#{node[:kitchen
 
 # Docker attributes
 node.default[:docker][:group_members] = %W( #{node[:jenkins][:master][:user]} root )
-
-# Sudo attributes
-node.default[:authorization][:sudo][:include_sudoers_d] = true
